@@ -5,6 +5,7 @@ import dbConnect from './config/database.js';
 import authRoutes from './routes/auth.route.js';
 import studentRoutes from './routes/student.route.js';
 import mentorRoutes from './routes/mentor.route.js';
+import adminRoutes from './routes/admin.route.js';
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
@@ -47,6 +48,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/mentor', mentorRoutes);
+app.use('/api/admin', adminRoutes)
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

@@ -2,6 +2,7 @@ import ProjectModel from "../../models/project.model.js";
 import StudentDataModel from "../../models/student-data.model.js";
 import UserModel from "../../models/user.model.js";
 import { uploadMultipleFiles } from "../../utils/upload.util.js";
+import axios from "axios";
 
 export const getAllStudentDetails = async (req, res) => {
     try {
@@ -53,7 +54,6 @@ export const getProjectDetails = async (req, res) => {
 
 export const createProject = async (req, res) => {
     try {
-        console.log("jo")
         const { studentId, title, description, tags } = req.body;
         if (!studentId || !title || !description || !req.files || req.files.length === 0) {
             console.log(studentId, title, description, req.files)
@@ -73,10 +73,21 @@ export const createProject = async (req, res) => {
         }
 
         // LOGIC TO GET TRANSCRIPTION FROM AUDIO FILES CAN BE ADDED HERE
+        const payload = [
+        {
+            url: uploadedFiles.files[0].url,
+            file_type: 'pdf'
+        }
+        ];
 
-        const {transcribe, structured_data } = await axios.post('http://127.0.0.1:7000/process-pdf', {
-            pdf_link: uploadedFiles.files[0].url
+        const result = await axios.post('http://127.0.0.1:7000/process-pdf', {
+            url: uploadedFiles.files[0].url,
+            type: 'pdf'
         })
+
+        const { transcribe, structured_data } = result.data;
+
+        console.log("Transcription result:", transcribe, structured_data);
 
         const projectDoc = await ProjectModel.create({
             title: title || `Project_${Date.now()}`,
@@ -112,9 +123,10 @@ export const createProject = async (req, res) => {
 
 export const getFeedback = async (req, res) => {
     try {
-        const { projectId } = req.query;
+        const { projectId } = req.params;
+        console.log("Generating feedback for project ID:", projectId);
         if (!projectId) {
-            return res.status(400).json({ message: "Project ID   is required" });
+            return res.status(400).json({ message: "Project ID is required" });
         }
 
         const project = await ProjectModel.findById(projectId);
@@ -127,23 +139,34 @@ export const getFeedback = async (req, res) => {
             return res.status(400).json({ message: "No transcription data available for this project" });
         }
         // Request to AI
-        const feedbackResponse = await axios.post('http://127.0.0.1:7000/llm-workflow/plan-feedback', {
-            json_data: transcribe
-        });
 
-        const saveFeedback = await ProjectModel.findByIdAndUpdate(projectId, {
+        if(!project.feedback || Object.keys(project.feedback).length === 0){
+        console.log("No feedback found, generating new feedback...");
+            const feedbackResponse = await axios.post('http://127.0.0.1:7000/llm-workflow/plan-feedback', {
+                json_data: transcribe
+            });
+
+            const saveFeedback = await ProjectModel.findByIdAndUpdate(projectId, {
             $set: {
-                feedback: feedbackResponse
+                feedback: feedbackResponse.data
             }
-        }, { new: true });
+            }, { new: true });
 
-        if (!saveFeedback) {
-            return res.status(404).json({ message: "Project not found" });
+            if (!saveFeedback) {
+                return res.status(404).json({ message: "Project not found" });
+            }
+
+            return res.status(200).json({
+                message: "Feedback generated and saved successfully",
+                feedback: project.feedback
+            });
+
         }
+        
 
-        res.status(200).json({
+        return res.status(200).json({
             message: "Feedback generated and saved successfully",
-            feedback: saveFeedback.feedback
+            feedback: project.feedback
         });
     } catch (error) {
         console.error("Error generating feedback:", error);
