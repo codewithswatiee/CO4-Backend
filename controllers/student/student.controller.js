@@ -53,8 +53,10 @@ export const getProjectDetails = async (req, res) => {
 
 export const createProject = async (req, res) => {
     try {
+        console.log("jo")
         const { studentId, title, description, tags } = req.body;
         if (!studentId || !title || !description || !req.files || req.files.length === 0) {
+            console.log(studentId, title, description, req.files)
             return res.status(400).json({ message: "Student ID and at least one file are required" });
         }
 

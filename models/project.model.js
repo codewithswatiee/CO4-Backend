@@ -37,7 +37,7 @@ const Project = new mongoose.Schema({
     transcribe: [],
     mentorRemarks:{
         Score:{ type: Number, default: 0 },
-        potentialCategory:{ type: String, enum:['High', 'Medium', 'Low'] }
+        potentialCategory:{ type: String, enum:['High', 'Medium', 'Low'] , default: 'Low'}
     }
 }, {
     timestamps: true
