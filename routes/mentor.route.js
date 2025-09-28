@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllStudents, getProjectDetails, getAnalysis, createComments } from '../controllers/mentor/mentor.controller.js';
+import { getAllStudents, getProjectDetails, getAnalysis, createComments, getComments } from '../controllers/mentor/mentor.controller.js';
 import { verifyToken } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
@@ -15,5 +15,6 @@ router.get('/analysis/:projectId', getAnalysis);
 
 // POST /mentors/comments
 router.post('/comments', createComments);
+router.get('/comments/:projectId', getComments);
 
 export default router;

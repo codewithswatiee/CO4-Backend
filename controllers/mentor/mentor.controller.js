@@ -207,36 +207,52 @@ export const getAnalysis = async (req, res) => {
 
 export const createComments = async (req, res) => {
     try {
-        const { projectId, mentorId, comment } = req.body;
-        if (!projectId || !mentorId || !comment || typeof comment !== 'string' || comment.trim() === '') {
+        const { projectId, comment } = req.body;
+        console.log("req.body", req.body);
+        if (!projectId || !comment || typeof comment !== 'string' || comment.trim() === '') {
+            console.log("Invalid input");
             return res.status(400).json({ message: "Project ID, Mentor ID and non-empty comment are required" });
         }
 
-        // Verify mentor exists and has mentor role
-        const mentor = await UserModel.findById(mentorId);
-        if (!mentor || mentor.role !== 'mentor') {
-            return res.status(404).json({ message: "Mentor not found or not authorized" });
-        }
 
         const project = await ProjectModel.findById(projectId);
         if (!project) {
+            console.log("Project not found");
             return res.status(404).json({ message: "Project not found" });
         }
 
-        const commentObj = {
-            mentorId,
-            comment: comment.trim(),
-            createdAt: new Date()
-        };
-
-        project.comments.push(commentObj);
+        console.log("commentString", comment);
+        project.comments.push(comment);
         await project.save();
 
-        const savedComment = project.comments[project.comments.length - 1];
-
-        return res.status(201).json({ message: "Comment created successfully", comment: savedComment });
+        return res.status(201).json({ 
+            message: "Comment created successfully", 
+            comment: {
+                text: comment.trim(),
+                timestamp: new Date()
+            }
+        });
     } catch (error) {
         console.error("Error creating comment:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+}
+
+export const getComments = async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        if (!projectId) {
+            return res.status(400).json({ message: "Project ID is required" });
+        }
+        const project = await ProjectModel.findById(projectId).select('comments');
+        if (!project) {
+            return res.status(404).json({ message: "Project not found" });
+        }
+        return res.status(200).json({ 
+            message: "Comments fetched successfully", 
+            comments: project.comments 
+        });
+    } catch (error) {
         return res.status(500).json({ message: "Internal server error" });
     }
 }
