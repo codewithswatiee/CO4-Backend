@@ -105,8 +105,10 @@ export const getProjectDetails = async (req , res) => {
                     value_and_model_basis: projectDetails.analysis?.value_and_model_basis || "Not available",
                     funding_readiness_basis: projectDetails.analysis?.funding_readiness_basis || "Not available",
                     funding_readiness_score: projectDetails.analysis?.funding_readiness_score || "Not available",
+                    kpis: projectDetails.analysis?.extracted_kpis || "Not available"
                 },
-                kpis: projectDetails.analysis?.extracted_kpis || "Not available"
+                news_summary: projectDetails.analysis?.news_summary || "Not available"
+                
             }
 
             return res.status(200).json({
@@ -138,7 +140,7 @@ export const getAnalysis = async (req, res) => {
         const analysis = project.analysis;
         if (analysis && Object.keys(analysis).length > 0) {
             console.log("Analysis already exists", analysis);
-            return res.status(404).json({ message: "Analysis already there" });
+            return res.status(404).json({ message: "Analysis already there" , analysis: analysis});
         }
         
         const response = await axios.post('http://127.0.0.1:7000/llm-workflow/llm-analysis', {
@@ -189,7 +191,8 @@ export const getAnalysis = async (req, res) => {
                     funding_readiness_score: data.analysis?.funding_readiness_score || "Not available",
                 },
                 kpis: data.analysis?.extracted_kpis || "Not available"
-            }
+            },
+            news_summary: data.news_summary || "Not available"
         }
 
 

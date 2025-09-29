@@ -85,9 +85,9 @@ export const createProject = async (req, res) => {
             type: 'pdf'
         })
 
-        const { transcribe, structured_data } = result.data;
+        const { transcribe, structured_data_student, structured_data_mentor } = result.data;
 
-        console.log("Transcription result:", transcribe, structured_data);
+        console.log("Transcription result:", transcribe, structured_data_student, structured_data_mentor);
 
         const projectDoc = await ProjectModel.create({
             title: title || `Project_${Date.now()}`,
@@ -99,7 +99,10 @@ export const createProject = async (req, res) => {
             mentorRemarks: {},
             comments: [],
             analysis: {},
-            formattedFile: structured_data || {}
+            formattedFile: {
+                student: structured_data_student || {},
+                mentor: structured_data_mentor || {}
+            } || {}
         });
 
         await projectDoc.save();
